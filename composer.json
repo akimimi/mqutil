@@ -1,5 +1,5 @@
 {
-    "name": "akimimi/messagequeueutil",
+    "name": "akimimi/mqutil",
     "description": "Message queue utitlity library for applications with queue and topic utilization. This library support Aliyun MNS service and will be support more message queue types in the future.",
     "type": "library",
     "require": {

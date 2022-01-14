@@ -1,8 +1,6 @@
 <?php
 namespace Akimimi\MessageQueueUtil;
 
-require_once __DIR__."/../vendor/autoload.php";
-
 use AliyunMNS\Client;
 use AliyunMNS\Requests\SendMessageRequest;
 use AliyunMNS\Requests\CreateQueueRequest;

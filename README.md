@@ -12,13 +12,13 @@ message queue service drivers in the future.
 
 This library support Add require with composer CLI.
 ```bash
-composer require akimimi/messagequeueutil
+composer require akimimi/mqutil
 ```
 Otherwise, add require to your `composer.json`.
 ```json
 {
   "require": {
-     "akimimi/messagequeueutil": ">=1.0.0"
+     "akimimi/mqutil": ">=1.0.0"
   }
 }
 ```

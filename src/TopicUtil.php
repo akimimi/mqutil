@@ -1,5 +1,4 @@
 <?php
-
 namespace Akimimi\MessageQueueUtil;
 
 use AliyunMNS\Client;

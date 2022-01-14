@@ -1,0 +1,26 @@
+{
+    "name": "akimimi/messagequeueutil",
+    "description": "Message queue utitlity library for applications with queue and topic utilization. This library support Aliyun MNS service and will be support more message queue types in the future.",
+    "type": "library",
+    "require": {
+        "aliyun/aliyun-mns-php-sdk": ">=1.0.0",
+        "php": ">=7.3.0"
+    },
+    "require-dev": {
+        "ext-yaml": "^2.2",
+        "phpunit/phpunit": "9.*"
+    },
+    "autoload":{
+      "psr-4": {
+        "Akimimi\\MessageQueueUtil\\": "src/",
+        "Akimimi\\MessageQueueUtil\\Exception\\": "src/exceptions/"
+      }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Murray Wang",
+            "email": "rui@mimixiche.com"
+        }
+    ]
+}

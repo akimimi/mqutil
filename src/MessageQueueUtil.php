@@ -149,15 +149,12 @@ class MessageQueueUtil {
     }
   }
 
-  public function receiveMessage($waitSeconds = self::DEFAULT_POLLING_WAIT_SECONDS): ?string
-  {
+  public function receiveMessage($waitSeconds = self::DEFAULT_POLLING_WAIT_SECONDS): ?string {
     try {
       $this->initializeReference();
       $res = $this->queue->receiveMessage($waitSeconds);
     } catch (MessageNotExistException $e) {
       return null;
-    } catch (MnsException $e) {
-      return MessageResult::FormattedError($e, "ReceiveMessage");
     }
 
     if (!empty($res)) {
@@ -199,8 +196,7 @@ class MessageQueueUtil {
     return MessageResult::Success();
   }
 
-  public function batchPeekMessages($numOfMessages = self::DEFAULT_BATCH_PEEK_MESSAGE_NUMBER): ?array
-  {
+  public function batchPeekMessages($numOfMessages = self::DEFAULT_BATCH_PEEK_MESSAGE_NUMBER): ?array {
     $results = array();
     $this->initializeReference();
     try {

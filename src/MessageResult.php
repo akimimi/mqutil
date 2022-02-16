@@ -21,7 +21,11 @@ class MessageResult {
   }
 
   public function errorMessage() {
-    return self::FormattedError($this->exception, $this->stage);
+    if ($this->rt) {
+      return "Success";
+    } else {
+      return self::FormattedError($this->exception, $this->stage);
+    }
   }
 
   static public function FormattedError($e, $stage = "") {

@@ -4,6 +4,7 @@
     "type": "library",
     "require": {
         "aliyun/aliyun-mns-php-sdk": ">=1.0.0",
+        "ext-json": "*",
         "php": ">=7.3.0"
     },
     "require-dev": {

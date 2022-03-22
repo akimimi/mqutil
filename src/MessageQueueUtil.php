@@ -2,12 +2,12 @@
 namespace Akimimi\MessageQueueUtil;
 
 use AliyunMNS\Client;
+use AliyunMNS\Queue;
 use AliyunMNS\Requests\SendMessageRequest;
 use AliyunMNS\Requests\CreateQueueRequest;
 use AliyunMNS\Exception\MessageNotExistException;
 use AliyunMNS\Exception\MnsException;
 use AliyunMNS\Model\QueueAttributes;
-use AliyunMNS\Model\BatchPeekMessageResponse;
 
 use Akimimi\MessageQueueUtil\Exception\QueueConfigInvalidException;
 use Akimimi\MessageQueueUtil\Exception\QueueNameInvalidException;
@@ -24,11 +24,11 @@ class MessageQueueUtil {
   const DEFAULT_BATCH_PEEK_MESSAGE_NUMBER = 16;
 
   /**
-   * @var AliyunMNS\Client|null
+   * @var Client|null
    */
   public $client = null;
   /**
-   * @var AliyunMNS\Queue|null
+   * @var Queue|null
    */
   public $queue = null;
 
@@ -178,7 +178,7 @@ class MessageQueueUtil {
       $this->queue->deleteMessage($this->receiptHandle);
     }
     catch (MnsException $e) {
-      return MessageResult::FormattedError($e, "DeleteMessage");
+      return MessageResult::Failed($e, "DeleteMessage");
     }
 
     return MessageResult::Success();
@@ -191,7 +191,7 @@ class MessageQueueUtil {
       $this->queue->changeMessageVisibility($receiptHandle, 30);
     }
     catch (MnsException $e) {
-      return MessageResult::FormattedError($e, "ChangeVisibility");
+      return MessageResult::Failed($e, "ChangeVisibility");
     }
     return MessageResult::Success();
   }

@@ -1,6 +1,9 @@
 <?php
 namespace Akimimi\MessageQueueUtil;
 
+use AliyunMNS\Exception\MnsException;
+use Exception;
+
 class MessageResult {
   public $rt = false;
   public $stage = "";
@@ -12,7 +15,7 @@ class MessageResult {
     $this->stage = $stage;
   }
 
-  public function errorCode() {
+  public function errorCode(): int {
     if ($this->exception instanceof Exception) {
       return $this->exception->getCode();
     } else {
@@ -20,7 +23,7 @@ class MessageResult {
     }
   }
 
-  public function errorMessage() {
+  public function errorMessage(): string {
     if ($this->rt) {
       return "Success";
     } else {
@@ -28,7 +31,7 @@ class MessageResult {
     }
   }
 
-  static public function FormattedError($e, $stage = "") {
+  static public function FormattedError($e, $stage = ""): string {
     if ($e instanceof MnsException) {
       return "$stage Failed: ".$e;
     } elseif ($e instanceof Exception) {
@@ -39,11 +42,11 @@ class MessageResult {
     }
   }
 
-  static public function Success() {
+  static public function Success(): MessageResult {
     return new MessageResult(true);
   }
 
-  static public function Failed($exception, $stage = "") {
+  static public function Failed($exception, $stage = ""): MessageResult {
     return new MessageResult(false, $exception, $stage);
   }
 }

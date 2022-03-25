@@ -7,6 +7,26 @@ use Akimimi\MessageQueueUtil\Exception\TopicNameInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicConfigInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicContentCheckException;
 
+/**
+ * @covers \Akimimi\MessageQueueUtil\AliyunMnsClientConfig::__construct
+ * @covers \Akimimi\MessageQueueUtil\AliyunMnsClientConfig::isValid
+ * @covers \Akimimi\MessageQueueUtil\MessageResult::Success
+ * @covers \Akimimi\MessageQueueUtil\MessageResult::__construct
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::__construct
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::initializeReference
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::setConfig
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::getConfig
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::setTopicName
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::createTopic
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::deleteTopic
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::unsubscribeTopic
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::getDefaultTopicAttribute
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::getTopicList
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::subscribeTopic
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishTextMessage
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishTaskMessage
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::listSubscribes
+ */
 final class TopicUtilTest extends TestCase {
   public function setUp(): void {
     $c = yaml_parse_file(__DIR__.'/aliyun_mns_test_config.yaml')['aliyunmns'];

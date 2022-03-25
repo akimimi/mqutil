@@ -5,6 +5,25 @@ use Akimimi\MessageQueueUtil\MessageQueueUtil;
 use Akimimi\MessageQueueUtil\Exception\QueueConfigInvalidException;
 use Akimimi\MessageQueueUtil\Exception\QueueNameInvalidException;
 
+/**
+ * @covers \Akimimi\MessageQueueUtil\MessageResult::Success
+ * @covers \Akimimi\MessageQueueUtil\MessageResult::__construct
+ * @covers \Akimimi\MessageQueueUtil\AliyunMnsClientConfig::__construct
+ * @covers \Akimimi\MessageQueueUtil\AliyunMnsClientConfig::isValid
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::__construct
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::initializeReference
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::setConfig
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::getConfig
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::setQueueName
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::createQueue
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::getDefaultQueueAttribute
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::sendTextMessage
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::receiveMessage
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::changeMessageVisibility
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::deleteMessage
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::batchPeekMessages
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::deleteQueue
+ */
 final class MessageQueueUtilTest extends TestCase {
 
   public function setUp(): void {

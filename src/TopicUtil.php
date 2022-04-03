@@ -2,19 +2,22 @@
 namespace Akimimi\MessageQueueUtil;
 
 use AliyunMNS\Client;
+use AliyunMNS\Topic;
 use AliyunMNS\Model\SubscriptionAttributes;
 use AliyunMNS\Model\TopicAttributes;
 use AliyunMNS\Requests\CreateTopicRequest;
 use AliyunMNS\Requests\ListTopicRequest;
 use AliyunMNS\Requests\PublishMessageRequest;
+use AliyunMNS\Exception\MnsException;
 
 use Akimimi\MessageQueueUtil\Exception\TopicConfigInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicContentCheckException;
 use Akimimi\MessageQueueUtil\Exception\TopicNameInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicHeaderSignatureInvalidExecption;
+use Exception;
+use SimpleXMLElement;
 
-class TopicUtil
-{
+class TopicUtil {
 
   const DEFAULT_MAX_MESSAGE_SIZE = 65536;
 
@@ -22,7 +25,7 @@ class TopicUtil
   const DEFAULT_NOTIFY_RETRY_STRATEGY = 'EXPONENTIAL_DECAY_RETRY';
 
   /**
-   * @var AliyunMNS\Client|null
+   * @var Client|null
    */
   public $client = null;
 
@@ -32,7 +35,7 @@ class TopicUtil
   public $topicName = "";
 
   /**
-   * @var AliyunMNS\Topic
+   * @var Topic|null
    */
   public $topic = null;
 
@@ -41,6 +44,10 @@ class TopicUtil
    */
   protected $_config = null;
 
+  /**
+   * @param string $topicName
+   * @param AliyunMnsClientConfig $config
+   */
   public function __construct(string $topicName, AliyunMnsClientConfig $config)
   {
     $this->_config = new AliyunMnsClientConfig("", "", "");
@@ -50,6 +57,11 @@ class TopicUtil
     $this->setTopicName($topicName);
   }
 
+  /**
+   * Set message queue config
+   * @param AliyunMnsClientConfig $config
+   * @return void
+   */
   public function setConfig(AliyunMnsClientConfig $config)
   {
     $this->_config = $config;
@@ -61,13 +73,20 @@ class TopicUtil
     }
   }
 
-  public function getConfig(): AliyunMnsClientConfig
-  {
+  /**
+   * Get message queue config object.
+   * @return AliyunMnsClientConfig
+   */
+  public function getConfig(): AliyunMnsClientConfig {
     return $this->_config;
   }
 
-  public function setTopicName(string $topicName): void
-  {
+  /**
+   * Set topic name.
+   * @param string $topicName
+   * @return void
+   */
+  public function setTopicName(string $topicName): void {
     if (!empty($topicName)) {
       $this->topicName = $topicName;
     } else {
@@ -75,8 +94,12 @@ class TopicUtil
     }
   }
 
-  public function initializeReference($force = false): bool
-  {
+  /**
+   * Initialize topic reference by and saved as $queue member.
+   * @param bool $force If is set true, the queue reference will be recreated.
+   * @return bool
+   */
+  public function initializeReference(bool $force = false): bool {
     if ($this->topic == null || $force) {
       $this->topic = $this->client->getTopicRef($this->topicName);
       return $this->topic != null;
@@ -85,8 +108,15 @@ class TopicUtil
     }
   }
 
-  public function createTopic(?TopicAttributes $topicAttributes = null): MessageResult
-  {
+  /**
+   * Create topic with multiple topic attributes.
+   * If attributes are not given, the default attribute returned by
+   * getDefaultTopicAttribute() method is applied.
+   *
+   * @param TopicAttributes|null $topicAttributes
+   * @return MessageResult
+   */
+  public function createTopic(?TopicAttributes $topicAttributes = null): MessageResult {
     if ($topicAttributes == null) {
       $topicAttributes = $this->getDefaultTopicAttribute();
     }
@@ -103,8 +133,12 @@ class TopicUtil
     }
   }
 
-  public function deleteTopic(): MessageResult
-  {
+  /**
+   * Delete topic with queue name.
+   *
+   * @return MessageResult
+   */
+  public function deleteTopic(): MessageResult {
     try {
       $res = $this->client->deleteTopic($this->topicName);
     } catch (Exception $e) {
@@ -117,8 +151,13 @@ class TopicUtil
     }
   }
 
-  public function publishTextMessage(string $body): MessageResult
-  {
+  /**
+   * Publish text message to topic
+   *
+   * @param string $body
+   * @return MessageResult
+   */
+  public function publishTextMessage(string $body): MessageResult {
     $request = new PublishMessageRequest($body);
 
     try {
@@ -135,8 +174,14 @@ class TopicUtil
     }
   }
 
-  public function publishTaskMessage(string $event = '', $keyId = null, $params = null): MessageResult
-  {
+  /**
+   * Publish task message in JSON formatted string.
+   * @param string $event
+   * @param string|null $keyId
+   * @param array|null $params
+   * @return MessageResult
+   */
+  public function publishTaskMessage(string $event = '', ?string $keyId = null, ?array $params = null): MessageResult {
     $messageBody = array(
       'event' => $event,
       'key_id' => $keyId,
@@ -146,15 +191,17 @@ class TopicUtil
   }
 
   /**
+   * Get message from HTTP request, and parse message body from XML content.
+   *
    * @param bool $setHttpResponseCode Function will invoke http_response_code if this parameter is set as True.
    *                                  HTTP code 401 stands for something wrong with header signature.
    *                                  HTTP code 400 stands for something wrong with content signature.
    *                                  HTTP code 200 if successfully got a message.
    * @return string|null Null value is returned if an exception happens,
    *                     or the message body as a string will be returned.
+   * @throws Exception If XML content could not be parsed.
    */
-  public function getMessage(bool $setHttpResponseCode = true): ?string
-  {
+  public function getMessage(bool $setHttpResponseCode = true): ?string {
     if (!$this->checkTopicSignature()) {
       if ($setHttpResponseCode) {
         http_response_code(401);
@@ -177,8 +224,12 @@ class TopicUtil
     return $msg;
   }
 
-  public function checkTopicSignature(): bool
-  {
+  /**
+   * Check received HTTP request signature by request headers.
+   *
+   * @return bool
+   */
+  public function checkTopicSignature(): bool {
     $tmpHeaders = array();
     $headers = $this->_getHttpHeaders();
     foreach ($headers as $key => $value) {
@@ -221,8 +272,13 @@ class TopicUtil
     return $this->verifyData($stringToSign, $signature, $publicKey);
   }
 
-  public function getTopicList(int $listSize = 0): ?array
-  {
+  /**
+   * Get topic list in service.
+   *
+   * @param int $listSize Max number of topics to return.
+   * @return array|null
+   */
+  public function getTopicList(int $listSize = 0): ?array {
     $request = new ListTopicRequest($listSize);
     try {
       $res = $this->client->listTopic($request);
@@ -236,11 +292,20 @@ class TopicUtil
     }
   }
 
+  /**
+   * Add a subscription for topic.
+   *
+   * @param string $subscriptionName
+   * @param string $subscriptionUrl
+   * @param string $notifyContentFormat
+   * @param string $notifyStrategy
+   * @param string|null $filterTag
+   * @return MessageResult
+   */
   public function subscribeTopic(string  $subscriptionName, string $subscriptionUrl,
                                  string  $notifyContentFormat = self::DEFAULT_NOTIFY_CONTENT_FORMAT,
                                  string  $notifyStrategy = self::DEFAULT_NOTIFY_RETRY_STRATEGY,
-                                 ?string $filterTag = null): MessageResult
-  {
+                                 ?string $filterTag = null): MessageResult {
     $this->initializeReference();
     $attributes = new SubscriptionAttributes(
       $subscriptionName, $subscriptionUrl, $notifyStrategy, $notifyContentFormat,
@@ -257,6 +322,14 @@ class TopicUtil
     }
   }
 
+  /**
+   * List subscribes in the topic.
+   *
+   * @param int $listSize Max number of subscribes to return.
+   * @param string|null $prefix Subscribe name prefix
+   * @param int|null $offset
+   * @return array|null
+   */
   public function listSubscribes(int $listSize = 0, ?string $prefix = null, ?int $offset = null): ?array
   {
     $this->initializeReference();
@@ -272,9 +345,13 @@ class TopicUtil
     }
   }
 
-
-  public function unsubscribeTopic($subscriptionName): MessageResult
-  {
+  /**
+   * Remove a subscription of the topic by subscription name.
+   *
+   * @param $subscriptionName
+   * @return MessageResult
+   */
+  public function unsubscribeTopic($subscriptionName): MessageResult {
     $this->initializeReference();
     try {
       $res = $this->topic->unsubscribe($subscriptionName);
@@ -288,16 +365,25 @@ class TopicUtil
     }
   }
 
-
-  public function getDefaultTopicAttribute(): TopicAttributes
-  {
+  /**
+   * Return default topic attributes.
+   *
+   * @return TopicAttributes
+   */
+  public function getDefaultTopicAttribute(): TopicAttributes {
     $attributes = new TopicAttributes;
     $attributes->setMaximumMessageSize(self::DEFAULT_MAX_MESSAGE_SIZE);
     return $attributes;
   }
 
-  public function verifyData($data, $signature, $pubKey): bool
-  {
+  /**
+   * Verify data signature with public key.
+   * @param string $data
+   * @param string $signature
+   * @param string|null $pubKey
+   * @return bool
+   */
+  public function verifyData(string $data, string $signature, ?string $pubKey): bool {
     $res = openssl_get_publickey($pubKey);
     $result = openssl_verify($data, base64_decode($signature), $res);
     openssl_free_key($res);
@@ -305,25 +391,20 @@ class TopicUtil
     return $result == 1;
   }
 
-  protected function _getByUrl($url): ?string
-  {
+  protected function _getByUrl($url): ?string {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_HEADER, 0);
 
     $output = curl_exec($ch);
-
     curl_close($ch);
-
     return $output;
   }
 
-  protected function _getHttpHeaders(): array
-  {
+  protected function _getHttpHeaders(): array {
     $headers = array();
     foreach ($_SERVER as $name => $value) {
-
       if (substr($name, 0, 5) == 'HTTP_') {
         $key = str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))));
         $headers[$key] = $value;

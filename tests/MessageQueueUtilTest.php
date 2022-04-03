@@ -18,6 +18,7 @@ use Akimimi\MessageQueueUtil\Exception\QueueNameInvalidException;
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::createQueue
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::getDefaultQueueAttribute
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::sendTextMessage
+ * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::sendTaskMessage
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::receiveMessage
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::changeMessageVisibility
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::deleteMessage
@@ -127,6 +128,15 @@ final class MessageQueueUtilTest extends TestCase {
     $util = new MessageQueueUtil("unittest-queue", $this->config);
     $messages = $util->batchPeekMessages(5);
     $this->assertGreaterThanOrEqual(1, count($messages));
+  }
+
+  /**
+   * @depends testBatchPeekMessages
+   */
+  public function testSendTaskToQueue(): void {
+    $util = new MessageQueueUtil("unittest-queue", $this->config);
+    $rt = $util->sendTaskMessage("task", "keyid", ['a' => 1]);
+    $this->assertTrue($rt->rt);
   }
 
   /**

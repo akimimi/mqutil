@@ -6,6 +6,7 @@ use AliyunMNS\Queue;
 use AliyunMNS\Requests\SendMessageRequest;
 use AliyunMNS\Requests\CreateQueueRequest;
 use AliyunMNS\Exception\MessageNotExistException;
+use AliyunMNS\Exception\QueueNotExistException;
 use AliyunMNS\Exception\MnsException;
 use AliyunMNS\Model\QueueAttributes;
 
@@ -52,6 +53,10 @@ class MessageQueueUtil {
    */
   protected $_config = null;
 
+  /**
+   * @param string $queueName
+   * @param AliyunMnsClientConfig $config
+   */
   public function __construct(string $queueName, AliyunMnsClientConfig $config) {
     $this->_config = new AliyunMnsClientConfig("", "", "");
     $this->setConfig($config);
@@ -60,7 +65,12 @@ class MessageQueueUtil {
     $this->setQueueName($queueName);
   }
 
-  public function setConfig(AliyunMnsClientConfig $config) {
+  /**
+   * Set message queue config
+   * @param AliyunMnsClientConfig $config
+   * @return void
+   */
+  public function setConfig(AliyunMnsClientConfig $config): void {
     $this->_config = $config;
     if (!$this->_config->isValid()) {
       throw new QueueConfigInvalidException();
@@ -71,10 +81,19 @@ class MessageQueueUtil {
     }
   }
 
+  /**
+   * Get message queue config object.
+   * @return AliyunMnsClientConfig
+   */
   public function getConfig(): AliyunMnsClientConfig {
     return $this->_config;
   }
 
+  /**
+   * Set queue name
+   * @param string $queueName
+   * @return void
+   */
   public function setQueueName(string $queueName): void {
     if (!empty($queueName)) {
       $this->queueName = $queueName;
@@ -83,7 +102,12 @@ class MessageQueueUtil {
     }
   }
 
-  public function initializeReference($force = false): bool {
+  /**
+   * Initialize queue reference by and saved as $queue member.
+   * @param bool $force If is set true, the queue reference will be recreated.
+   * @return bool
+   */
+  public function initializeReference(bool $force = false): bool {
     if ($this->queue == null || $force) {
       $this->queue = $this->client->getQueueRef($this->queueName);
       return $this->queue != null;
@@ -92,6 +116,14 @@ class MessageQueueUtil {
     }
   }
 
+  /**
+   * Create queue with multiple queue attributes.
+   * If attributes are not given, the default attribute returned by
+   * getDefaultQueueAttribute() method is applied.
+   *
+   * @param QueueAttributes|null $queueAttr
+   * @return MessageResult
+   */
   public function createQueue(?QueueAttributes $queueAttr = null): MessageResult {
     if ($queueAttr == null) {
       $queueAttr = $this->getDefaultQueueAttribute();
@@ -110,9 +142,14 @@ class MessageQueueUtil {
     }
   }
 
+  /**
+   * Delete queue with queue name.
+   *
+   * @return MessageResult
+   */
   public function deleteQueue(): MessageResult {
     try {
-      $rt = $this->client->deleteQueue($this->queueName);
+      $this->client->deleteQueue($this->queueName);
     }
     catch (MnsException $e) {
       return MessageResult::Failed($e, "DeleteQueue");
@@ -120,7 +157,18 @@ class MessageQueueUtil {
     return MessageResult::Success();
   }
 
-  public function sendTaskMessage($task, $keyId, $params, $event = null,
+  /**
+   * Send task in JSON formatted string.
+   *
+   * @param string $task
+   * @param string $keyId
+   * @param array|null $params
+   * @param $event
+   * @param int|null $delay
+   * @param int|null $priority
+   * @return MessageResult
+   */
+  public function sendTaskMessage(string $task, string $keyId, ?array $params, $event = null,
                                   ?int $delay = self::DEFAULT_DELAY_SECONDS,
                                   ?int $priority = self::DEFAULT_PRIORITY): MessageResult {
     $messageBody = array(
@@ -132,6 +180,14 @@ class MessageQueueUtil {
     return $this->sendTextMessage(json_encode($messageBody), $delay, $priority);
   }
 
+  /**
+   * Send text message with body string.
+   *
+   * @param string $body
+   * @param int|null $delay
+   * @param int|null $priority
+   * @return MessageResult
+   */
   public function sendTextMessage(string $body, ?int $delay = self::DEFAULT_DELAY_SECONDS,
                                   ?int   $priority = self::DEFAULT_PRIORITY): MessageResult {
     $request = new SendMessageRequest($body, $delay, $priority);
@@ -149,7 +205,21 @@ class MessageQueueUtil {
     }
   }
 
-  public function receiveMessage($waitSeconds = self::DEFAULT_POLLING_WAIT_SECONDS): ?string {
+  /**
+   * Receive message in $waitSeconds.
+   * If message is received successfully, message body in string type will be returned.
+   * If message is received but the dequeue count is greater or equal than dequeueCount variable,
+   * the message will be deleted and a null value is returned.
+   * If no message is received until $waitSeconds, null value is returned.
+   * If something unexpected happens, exceptions will be thrown.
+   *
+   * @throws QueueNotExistException if queue does not exist
+   * @throws MnsException if any other exception happens
+   *
+   * @param int $waitSeconds
+   * @return string|null
+   */
+  public function receiveMessage(int $waitSeconds = self::DEFAULT_POLLING_WAIT_SECONDS): ?string {
     try {
       $this->initializeReference();
       $res = $this->queue->receiveMessage($waitSeconds);
@@ -172,6 +242,11 @@ class MessageQueueUtil {
     }
   }
 
+  /**
+   * Delete message the queue just received.
+   *
+   * @return MessageResult
+   */
   public function deleteMessage(): MessageResult {
     try {
       $this->initializeReference();
@@ -184,11 +259,18 @@ class MessageQueueUtil {
     return MessageResult::Success();
   }
 
-  public function changeMessageVisibility(): MessageResult {
+  /**
+   * Change the visibility of just received message. The API is usually invoked
+   * when the consumer processes the message but gets a failure result.
+   *
+   * @param int $visibleInSeconds
+   * @return MessageResult
+   */
+  public function changeMessageVisibility(int $visibleInSeconds = 30): MessageResult {
     $receiptHandle = $this->receiptHandle;
     $this->initializeReference();
     try {
-      $this->queue->changeMessageVisibility($receiptHandle, 30);
+      $this->queue->changeMessageVisibility($receiptHandle, $visibleInSeconds);
     }
     catch (MnsException $e) {
       return MessageResult::Failed($e, "ChangeVisibility");
@@ -196,7 +278,19 @@ class MessageQueueUtil {
     return MessageResult::Success();
   }
 
-  public function batchPeekMessages($numOfMessages = self::DEFAULT_BATCH_PEEK_MESSAGE_NUMBER): ?array {
+  /**
+   * Peek a group of messages, the number of peeked messages will not over $numOfMessages.
+   * If messages are received and dequeue count is greater or equal than dequeueCount value,
+   * an array of messages in string type will be returned.
+   * If no message is received, null value is returned.
+   *
+   * @throws QueueNotExistException if queue does not exist
+   * @throws MnsException if any other exception happens
+   *
+   * @param int $numOfMessages
+   * @return array|null
+   */
+  public function batchPeekMessages(int $numOfMessages = self::DEFAULT_BATCH_PEEK_MESSAGE_NUMBER): ?array {
     $results = array();
     $this->initializeReference();
     try {
@@ -204,16 +298,28 @@ class MessageQueueUtil {
       if ($batchResp->isSucceed()) {
         $messages = $batchResp->getMessages();
         foreach ($messages as $message) {
-          $results[] = $message->getMessageBody();
+          $result = $message->getMessageBody();
+          $this->receiptHandle = $message->getReceiptHandle();
+          $dequeueCnt = $message->getDequeueCount();
+          if ($dequeueCnt >= $this->dequeueCount) {
+            $this->deleteMessage();
+          } else {
+            $results[] = $result;
+          }
         }
       }
     }
-    catch (MnsException $e) {
+    catch (MessageNotExistException $e) {
       return null;
     }
     return $results;
   }
 
+  /**
+   * Return default queue attributes.
+   *
+   * @return QueueAttributes
+   */
   public function getDefaultQueueAttribute(): QueueAttributes {
     $queueAttr = new QueueAttributes();
     $queueAttr->setDelaySeconds(self::DEFAULT_DELAY_SECONDS);

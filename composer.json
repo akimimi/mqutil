@@ -3,13 +3,16 @@
     "description": "Message queue utitlity library for applications with queue and topic utilization. This library support Aliyun MNS service and will be support more message queue types in the future.",
     "type": "library",
     "require": {
-        "aliyun/aliyun-mns-php-sdk": ">=1.0.0",
-        "ext-json": "*",
-        "php": ">=7.3.0"
+      "aliyun/aliyun-mns-php-sdk": ">=1.0.0",
+      "ext-json": "*",
+      "php": ">=7.3.0",
+      "ext-simplexml": "*",
+      "ext-openssl": "*",
+      "ext-curl": "*"
     },
     "require-dev": {
-        "ext-yaml": "^2.2",
-        "phpunit/phpunit": "9.*"
+      "ext-yaml": "^2.2",
+      "phpunit/phpunit": "9.*"
     },
     "autoload":{
       "psr-4": {

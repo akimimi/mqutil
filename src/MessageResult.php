@@ -35,10 +35,10 @@ class MessageResult {
     if ($e instanceof MnsException) {
       return "$stage Failed: ".$e;
     } elseif ($e instanceof Exception) {
-      return "$stage Failed: ".$e.PHP_EOL."ErrorCode: ".$e->getCode().PHP_EOL;
+      return "$stage Failed: ".$e->getMessage()." ErrorCode: ".$e->getCode();
     }
     else {
-      return "$stage Failed: ".strval($e);
+      return "$stage Failed: ".$e;
     }
   }
 

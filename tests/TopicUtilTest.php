@@ -163,7 +163,7 @@ final class TopicUtilTest extends TestCase {
     <PublishTime>1449556920975</PublishTime>
 </Notification>
 EOF;
-    $util->setContentFormat(TopicUtil::MESSAGE_FORMAT_XML);
+    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_XML);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
 
@@ -180,12 +180,12 @@ EOF;
     "PublishTime":"1449556920975"
 }
 EOF;
-    $util->setContentFormat(TopicUtil::MESSAGE_FORMAT_JSON);
+    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_JSON);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
 
     $content = "Message is here.";
-    $util->setContentFormat(TopicUtil::MESSAGE_FORMAT_SIMPLIFIED);
+    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_SIMPLIFIED);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
   }
@@ -198,7 +198,7 @@ EOF;
 <?xml version="1.0" encoding="utf-8"?>
 <Notification xlmns="http://mns.aliyuncs.com/doc/v1/">
 EOF;
-    $util->setContentFormat(TopicUtil::MESSAGE_FORMAT_XML);
+    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_XML);
     $util->parseMessageFromContent($content);
   }
 
@@ -207,7 +207,7 @@ EOF;
 
     $util = new TopicUtil("unittest-topic", $this->config);
     $content = "I'm not a JSON string.";
-    $util->setContentFormat(TopicUtil::MESSAGE_FORMAT_JSON);
+    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_JSON);
     $util->parseMessageFromContent($content);
   }
 }

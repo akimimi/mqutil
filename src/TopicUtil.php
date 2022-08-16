@@ -43,11 +43,11 @@ class TopicUtil {
   /**
    * @var string
    */
-  public $contentFormat = self::MESSAGE_FORMAT_XML;
+  public $contentFormat = self::CONTENT_FORMAT_XML;
 
-  const MESSAGE_FORMAT_XML = "xml";
-  const MESSAGE_FORMAT_JSON = "json";
-  const MESSAGE_FORMAT_SIMPLIFIED = "simplified";
+  const CONTENT_FORMAT_XML = "xml";
+  const CONTENT_FORMAT_JSON = "json";
+  const CONTENT_FORMAT_SIMPLIFIED = "simplified";
 
   /**
    * @var AliyunMnsClientConfig|null
@@ -421,8 +421,8 @@ class TopicUtil {
    * @return void
    */
   public function setContentFormat(string $format): void {
-    if ($format == self::MESSAGE_FORMAT_XML || $format == self::MESSAGE_FORMAT_JSON
-    || $format == self::MESSAGE_FORMAT_SIMPLIFIED) {
+    if ($format == self::CONTENT_FORMAT_XML || $format == self::CONTENT_FORMAT_JSON
+    || $format == self::CONTENT_FORMAT_SIMPLIFIED) {
       $this->contentFormat = $format;
     }
   }
@@ -432,7 +432,7 @@ class TopicUtil {
    */
   public function parseMessageFromContent(string $content): string {
     $msg = "";
-    if ($this->contentFormat == self::MESSAGE_FORMAT_XML) {
+    if ($this->contentFormat == self::CONTENT_FORMAT_XML) {
       try {
         $content = new SimpleXMLElement($content);
         $msg = $content->Message;
@@ -440,7 +440,7 @@ class TopicUtil {
         throw new TopicMessageParseException();
       }
     }
-    if ($this->contentFormat == self::MESSAGE_FORMAT_JSON) {
+    if ($this->contentFormat == self::CONTENT_FORMAT_JSON) {
       $content = json_decode($content);
       if (!isset($content->Message)) {
         throw new TopicMessageParseException();
@@ -448,7 +448,7 @@ class TopicUtil {
         $msg = $content->Message;
       }
     }
-    if ($this->contentFormat == self::MESSAGE_FORMAT_SIMPLIFIED) {
+    if ($this->contentFormat == self::CONTENT_FORMAT_SIMPLIFIED) {
       $msg = $content;
     }
     return $msg;

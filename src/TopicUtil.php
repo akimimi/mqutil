@@ -45,9 +45,9 @@ class TopicUtil {
    */
   public $contentFormat = self::CONTENT_FORMAT_XML;
 
-  const CONTENT_FORMAT_XML = "xml";
-  const CONTENT_FORMAT_JSON = "json";
-  const CONTENT_FORMAT_SIMPLIFIED = "simplified";
+  const CONTENT_FORMAT_XML = "XML";
+  const CONTENT_FORMAT_JSON = "JSON";
+  const CONTENT_FORMAT_SIMPLIFIED = "SIMPLIFIED";
 
   /**
    * @var AliyunMnsClientConfig|null

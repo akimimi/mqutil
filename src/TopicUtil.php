@@ -1,6 +1,7 @@
 <?php
 namespace Akimimi\MessageQueueUtil;
 
+use Akimimi\MessageQueueUtil\Exception\TopicMessageParseException;
 use AliyunMNS\Client;
 use AliyunMNS\Topic;
 use AliyunMNS\Model\SubscriptionAttributes;
@@ -38,6 +39,15 @@ class TopicUtil {
    * @var Topic|null
    */
   public $topic = null;
+
+  /**
+   * @var string
+   */
+  public $contentFormat = self::CONTENT_FORMAT_XML;
+
+  const CONTENT_FORMAT_XML = "XML";
+  const CONTENT_FORMAT_JSON = "JSON";
+  const CONTENT_FORMAT_SIMPLIFIED = "SIMPLIFIED";
 
   /**
    * @var AliyunMnsClientConfig|null
@@ -196,12 +206,18 @@ class TopicUtil {
    * @param bool $setHttpResponseCode Function will invoke http_response_code if this parameter is set as True.
    *                                  HTTP code 401 stands for something wrong with header signature.
    *                                  HTTP code 400 stands for something wrong with content signature.
+   *                                  HTTP code 500 stands for something wrong in parsing message.
    *                                  HTTP code 200 if successfully got a message.
+   * @param string|null $contentFormat Content format that HTTP listener received.
+   *                                   By default, class member $contentFormat is used.
    * @return string|null Null value is returned if an exception happens,
    *                     or the message body as a string will be returned.
    * @throws Exception If XML content could not be parsed.
    */
-  public function getMessage(bool $setHttpResponseCode = true): ?string {
+  public function getMessage(bool $setHttpResponseCode = true, ?string $contentFormat = null): ?string {
+    if ($contentFormat != null) {
+      $this->setContentFormat($contentFormat);
+    }
     if (!$this->checkTopicSignature()) {
       if ($setHttpResponseCode) {
         http_response_code(401);
@@ -216,12 +232,20 @@ class TopicUtil {
       }
       throw new TopicContentCheckException();
     }
-    $content = new SimpleXMLElement($content);
-    $msg = $content->Message;
-    if ($setHttpResponseCode) {
-      http_response_code(200);
+    try {
+      $msg = $this->parseMessageFromContent($content);
+      if ($setHttpResponseCode) {
+        http_response_code(200);
+      }
+      return $msg;
+    } catch (Exception $e) {
+      if ($setHttpResponseCode) {
+        http_response_code(500);
+        return null;
+      } else {
+        throw $e;
+      }
     }
-    return $msg;
   }
 
   /**
@@ -389,6 +413,45 @@ class TopicUtil {
     openssl_free_key($res);
 
     return $result == 1;
+  }
+
+  /**
+   * Set content format as XML/Json/Simplified
+   * @param string $format
+   * @return void
+   */
+  public function setContentFormat(string $format): void {
+    if ($format == self::CONTENT_FORMAT_XML || $format == self::CONTENT_FORMAT_JSON
+    || $format == self::CONTENT_FORMAT_SIMPLIFIED) {
+      $this->contentFormat = $format;
+    }
+  }
+
+  /**
+   * @throws TopicContentCheckException
+   */
+  public function parseMessageFromContent(string $content): string {
+    $msg = "";
+    if ($this->contentFormat == self::CONTENT_FORMAT_XML) {
+      try {
+        $content = new SimpleXMLElement($content);
+        $msg = $content->Message;
+      } catch (Exception $e) {
+        throw new TopicMessageParseException();
+      }
+    }
+    if ($this->contentFormat == self::CONTENT_FORMAT_JSON) {
+      $content = json_decode($content);
+      if (!isset($content->Message)) {
+        throw new TopicMessageParseException();
+      } else {
+        $msg = $content->Message;
+      }
+    }
+    if ($this->contentFormat == self::CONTENT_FORMAT_SIMPLIFIED) {
+      $msg = $content;
+    }
+    return $msg;
   }
 
   protected function _getByUrl($url): ?string {

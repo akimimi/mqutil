@@ -24,6 +24,8 @@ use Akimimi\MessageQueueUtil\Exception\QueueNameInvalidException;
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::deleteMessage
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::batchPeekMessages
  * @covers \Akimimi\MessageQueueUtil\MessageQueueUtil::deleteQueue
+ * @covers \Akimimi\MessageQueueUtil\Exception\QueueConfigInvalidException::__construct
+ * @covers \Akimimi\MessageQueueUtil\Exception\QueueNameInvalidException::__construct
  */
 final class MessageQueueUtilTest extends TestCase {
 

@@ -1,0 +1,13 @@
+<?php
+namespace Akimimi\MessageQueueUtil;
+
+class Topic {
+  const CONTENT_FORMAT_XML = "XML";
+  const CONTENT_FORMAT_JSON = "JSON";
+  const CONTENT_FORMAT_SIMPLIFIED = "SIMPLIFIED";
+
+  const DEFAULT_NOTIFY_CONTENT_FORMAT = 'XML';
+  const DEFAULT_NOTIFY_RETRY_STRATEGY = 'EXPONENTIAL_DECAY_RETRY';
+
+}
+

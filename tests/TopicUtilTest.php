@@ -2,7 +2,9 @@
 
 use PHPUnit\Framework\TestCase;
 use Akimimi\MessageQueueUtil\AliyunMnsClientConfig;
+use Akimimi\MessageQueueUtil\Topic;
 use Akimimi\MessageQueueUtil\TopicUtil;
+use Akimimi\MessageQueueUtil\TopicHttpReceiver;
 use Akimimi\MessageQueueUtil\Exception\TopicNameInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicConfigInvalidException;
 use Akimimi\MessageQueueUtil\Exception\TopicContentCheckException;
@@ -27,8 +29,8 @@ use Akimimi\MessageQueueUtil\Exception\TopicMessageParseException;
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishTextMessage
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishEvent
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::listSubscribes
- * @covers \Akimimi\MessageQueueUtil\TopicUtil::setContentFormat
- * @covers \Akimimi\MessageQueueUtil\TopicUtil::parseMessageFromContent
+ * @covers \Akimimi\MessageQueueUtil\Topic::setContentFormat
+ * @covers \Akimimi\MessageQueueUtil\Topic::parseMessageFromContent
  * @covers \Akimimi\MessageQueueUtil\Exception\TopicNameInvalidException::__construct
  * @covers \Akimimi\MessageQueueUtil\Exception\TopicConfigInvalidException::__construct
  * @covers \Akimimi\MessageQueueUtil\Exception\TopicMessageParseException::__construct
@@ -97,7 +99,7 @@ final class TopicUtilTest extends TestCase {
   public function testSubscribeTopic(): void {
     $util = new TopicUtil("unittest-topic", $this->config);
     $rt = $util->subscribeTopic("sub1", "https://www.mimixiche.com",
-      "JSON", TopicUtil::DEFAULT_NOTIFY_RETRY_STRATEGY, "abc");
+      "JSON", Topic::DEFAULT_NOTIFY_RETRY_STRATEGY, "abc");
     $this->assertTrue($rt->rt);
   }
 
@@ -129,7 +131,7 @@ final class TopicUtilTest extends TestCase {
   }
 
   /**
-   * @depends testPublishTaskMessage
+   * @depends testPublishEvent
    */
   public function testUnsubscribeTopic(): void {
     $util = new TopicUtil("unittest-topic", $this->config);
@@ -138,7 +140,7 @@ final class TopicUtilTest extends TestCase {
   }
 
   /**
-   * @depends testPublishTaskMessage
+   * @depends testPublishEvent
    */
   public function testDeleteTopic(): void {
     $util = new TopicUtil("unittest-topic", $this->config);
@@ -147,7 +149,7 @@ final class TopicUtilTest extends TestCase {
   }
 
   public function testParseMessageFromContent(): void {
-    $util = new TopicUtil("unittest-topic", $this->config);
+    $util = new TopicHttpReceiver();
 
     $content = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
@@ -163,7 +165,7 @@ final class TopicUtilTest extends TestCase {
     <PublishTime>1449556920975</PublishTime>
 </Notification>
 EOF;
-    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_XML);
+    $util->setContentFormat(Topic::CONTENT_FORMAT_XML);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
 
@@ -180,12 +182,12 @@ EOF;
     "PublishTime":"1449556920975"
 }
 EOF;
-    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_JSON);
+    $util->setContentFormat(Topic::CONTENT_FORMAT_JSON);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
 
     $content = "Message is here.";
-    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_SIMPLIFIED);
+    $util->setContentFormat(Topic::CONTENT_FORMAT_SIMPLIFIED);
     $msg = $util->parseMessageFromContent($content);
     $this->assertEquals("Message is here.", $msg);
   }
@@ -193,21 +195,21 @@ EOF;
   public function testParseMessageFromXmlContentWithException(): void {
     $this->expectException("Akimimi\MessageQueueUtil\Exception\TopicMessageParseException");
 
-    $util = new TopicUtil("unittest-topic", $this->config);
+    $util = new TopicHttpReceiver();
     $content = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <Notification xlmns="http://mns.aliyuncs.com/doc/v1/">
 EOF;
-    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_XML);
+    $util->setContentFormat(Topic::CONTENT_FORMAT_XML);
     $util->parseMessageFromContent($content);
   }
 
   public function testParseMessageFromJsonContentWithException(): void {
     $this->expectException("Akimimi\MessageQueueUtil\Exception\TopicMessageParseException");
 
-    $util = new TopicUtil("unittest-topic", $this->config);
+    $util = new TopicHttpReceiver();
     $content = "I'm not a JSON string.";
-    $util->setContentFormat(TopicUtil::CONTENT_FORMAT_JSON);
+    $util->setContentFormat(Topic::CONTENT_FORMAT_JSON);
     $util->parseMessageFromContent($content);
   }
 }

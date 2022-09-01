@@ -25,7 +25,7 @@ use Akimimi\MessageQueueUtil\Exception\TopicMessageParseException;
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::getTopicList
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::subscribeTopic
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishTextMessage
- * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishTaskMessage
+ * @covers \Akimimi\MessageQueueUtil\TopicUtil::publishEvent
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::listSubscribes
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::setContentFormat
  * @covers \Akimimi\MessageQueueUtil\TopicUtil::parseMessageFromContent
@@ -122,9 +122,9 @@ final class TopicUtilTest extends TestCase {
   /**
    * @depends testSubscribeTopic
    */
-  public function testPublishTaskMessage(): void {
+  public function testPublishEvent(): void {
     $util = new TopicUtil("unittest-topic", $this->config);
-    $rt = $util->publishTaskMessage("something", "keyid", ['a' => 1]);
+    $rt = $util->publishEvent("something", "keyid", ['a' => 1]);
     $this->assertTrue($rt->rt);
   }
 

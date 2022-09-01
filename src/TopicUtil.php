@@ -185,13 +185,13 @@ class TopicUtil {
   }
 
   /**
-   * Publish task message in JSON formatted string.
+   * Publish event message in JSON formatted string.
    * @param string $event
    * @param string|null $keyId
    * @param array|null $params
    * @return MessageResult
    */
-  public function publishTaskMessage(string $event = '', ?string $keyId = null, ?array $params = null): MessageResult {
+  public function publishEvent(string $event = '', ?string $keyId = null, ?array $params = null): MessageResult {
     $messageBody = array(
       'event' => $event,
       'key_id' => $keyId,

@@ -12,6 +12,7 @@ class TopicHttpReceiver {
    */
   public $contentFormat = Topic::CONTENT_FORMAT_XML;
 
+
   /**
    * Get message from HTTP request, and parse message body from XML content.
    *
@@ -38,6 +39,7 @@ class TopicHttpReceiver {
     }
     $content = file_get_contents("php://input");
 
+    $contentMd5 = $this->getParamFromHeaders("Content-MD5");
     if (!empty($contentMd5) && $contentMd5 != base64_encode(md5($content))) {
       if ($setHttpResponseCode) {
         http_response_code(400);
@@ -118,23 +120,8 @@ class TopicHttpReceiver {
     }, $tmpHeaders, array_keys($tmpHeaders)));
     $method = $_SERVER['REQUEST_METHOD'];
     $canonicalizedResource = $_SERVER['REQUEST_URI'];
-    $contentMd5 = '';
-    if (array_key_exists('Content-MD5', $headers)) {
-      $contentMd5 = $headers['Content-MD5'];
-    } else if (array_key_exists('Content-md5', $headers)) {
-      $contentMd5 = $headers['Content-md5'];
-    } else if (array_key_exists('Content-Md5', $headers)) {
-      $contentMd5 = $headers['Content-Md5'];
-    } else if (array_key_exists('content-md5', $headers)) {
-      $contentMd5 = $headers['content-md5'];
-    }
-    $contentType = '';
-    if (array_key_exists('Content-Type', $headers)) {
-      $contentType = $headers['Content-Type'];
-    } else if
-    (array_key_exists('content-type', $headers)) {
-      $contentType = $headers['content-type'];
-    }
+    $contentMd5 = $this->getParamFromHeaders("Content-MD5", $headers);
+    $contentType = $this->getParamFromHeaders("Content-Type", $headers);
     if (!isset($headers['date'])) {
       return false;
     }
@@ -162,6 +149,32 @@ class TopicHttpReceiver {
     return $result == 1;
   }
 
+  /**
+   * Get HTTP parameter start with HTTP_ header.
+   * @param string $key
+   * @param array|null $headers
+   * @return string
+   */
+  public function getParamFromHeaders(string $key, ?array $headers = null): string {
+    if (empty($headers)) {
+      $headers = $this->_getHttpHeaders();
+    }
+
+    $tryKeys = array($key);
+    $tryKeys[] = strtolower($key);
+    if ($key == "Content-MD5") {
+      $tryKeys[] = "Content-md5";
+      $tryKeys[] = "Content-Md5";
+    }
+
+    foreach ($tryKeys as $k) {
+      if (isset($headers[$k])) {
+        return $headers[$k];
+      }
+    }
+    return "";
+  }
+
   protected function _getByUrl($url): ?string {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -183,4 +196,5 @@ class TopicHttpReceiver {
     }
     return $headers;
   }
+
 }

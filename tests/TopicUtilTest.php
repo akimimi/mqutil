@@ -192,6 +192,18 @@ EOF;
     $this->assertEquals("Message is here.", $msg);
   }
 
+  public function testGetParamFromHeaders(): void {
+    $receiver = new TopicHttpReceiver();
+    $headers = [
+      'content-type' => 'content-type',
+      'content-md5' => 'content-md5',
+    ];
+    $md5 = $receiver->getParamFromHeaders('Content-MD5', $headers);
+    $this->assertEquals("content-md5", $md5);
+    $type = $receiver->getParamFromHeaders('Content-Type', $headers);
+    $this->assertEquals("content-type", $type);
+  }
+
   public function testParseMessageFromXmlContentWithException(): void {
     $this->expectException("Akimimi\MessageQueueUtil\Exception\TopicMessageParseException");
 
